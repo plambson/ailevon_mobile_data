@@ -1,6 +1,7 @@
 import argparse
 import csv
 from collections import Counter, defaultdict
+import pandas as pd
 
 
 parser = argparse.ArgumentParser(description="Mobile Data Combiner",
@@ -34,6 +35,34 @@ class MobileDataParser:
         self.out_file_name = 'out.csv'
         self.zip1_file_name = 'zip1.csv'
         self.zip2_file_name = 'zip2.csv'
+        self.group_by_field = [
+            # 'Polygon Id',
+            # 'Hashed Ubermedia Id',
+            # 'Common Evening Lat',
+            # 'Common Evening Long',
+            # 'Visit Timestamp',
+            'Common Evening Country',
+            # 'Common Evening Census',
+            # 'Common Evening Micro',
+            'Common Evening Municipality',
+            'Common Evening Admin',
+            'Common Evening Province',
+            # 'Common Evening Postal1',
+            # 'Common Evening Postal2',
+            'Common Evening Custom1',
+            'Common Evening Custom2',
+            # 'Common Evening Distance Mi',
+            'Visit Date',
+            # 'Visit Time',
+            'Visit Day of Week',
+            'CBSA',
+            'year',
+            'month',
+            'day']
+        self.summarize_fields = [
+            'estimated_visitors',
+            'observed_visits',
+            'near_estimated_visits']
 
     def parse_crosswalk(self):
         """
@@ -85,8 +114,8 @@ class MobileDataParser:
                     dictionary['CBSA'] = 'NO MSA ASSIGNED'
                     self.no_msa_count += 1
                 try:
-                    dictionary['estimated_visitors'] = self.estimate_dicts[dictionary['Polygon Id']][
-                        dictionary['Visit Date']]
+                    dictionary['estimated_visitors'] = int(self.estimate_dicts[dictionary['Polygon Id']][
+                        dictionary['Visit Date']])
                 except:
                     self.not_in_file_count += 1
                 self.CEL.append(dictionary)
@@ -125,15 +154,17 @@ class MobileDataParser:
             if idx % 250000 == 0:
                 print(f'Final Calcs Calculated {idx}')
 
-    def summarize_zips(self):
-        out = dict()
-        for zip1 in self.zip1.keys():
-            out[zip1] = sum(self.zip1[zip1])
-        self.zip1_summary = out
-        out = dict()
-        for zip2 in self.zip2.keys():
-            out[zip2] = sum(self.zip2[zip2])
-        self.zip2_summary = out
+    def summarize_write_zips(self):
+        print('Summarizing and Writing Zips')
+        df = pd.DataFrame(self.CEL)
+        self.group_by_field.append('Common Evening Postal1')
+        out = df.groupby(by = self.group_by_field)[self.summarize_fields].sum().reset_index()
+        self.group_by_field.pop()
+        out.to_csv(self.zip1_file_name, index=False)
+        self.group_by_field.append('Common Evening Postal2')
+        out = df.groupby(self.group_by_field)[self.summarize_fields].sum().reset_index()
+        self.group_by_field.pop()
+        out.to_csv(self.zip2_file_name, index=False)
 
     def print_report(self):
         print('Final Report')
@@ -150,16 +181,6 @@ class MobileDataParser:
             writer.writeheader()
             writer.writerows(self.CEL)
         self.out = True
-        with open(self.zip1_file_name, 'w') as csv_file:
-            writer = csv.writer(csv_file)
-            writer.writerow(['zip1', 'near_estimated_visits'])
-            for key, value in self.zip1_summary.items():
-                writer.writerow([key, value])
-        with open(self.zip2_file_name, 'w') as csv_file:
-            writer = csv.writer(csv_file)
-            writer.writerow(['zip2', 'near_estimated_visits'])
-            for key, value in self.zip2_summary.items():
-                writer.writerow([key, value])
 
     def start(self):
         print("Starting...")
@@ -168,10 +189,10 @@ class MobileDataParser:
         self.parse_CEL()
         self.make_observation_summary()
         self.make_final_calcs()
-        self.summarize_zips()
-        self.write_out()
+        self.summarize_write_zips()
         print("Completed!")
         self.print_report()
+
 
 data_object = MobileDataParser(**config)
 data_object.start()
