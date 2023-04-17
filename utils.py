@@ -36,21 +36,19 @@ class MobileDataParser:
         self.zip1_file_name = 'zip1.csv'
         self.zip2_file_name = 'zip2.csv'
         self.group_by_field = [
-            # 'Polygon Id',
+            'Polygon Id',
             # 'Hashed Ubermedia Id',
             # 'Common Evening Lat',
             # 'Common Evening Long',
             # 'Visit Timestamp',
             'Common Evening Country',
             # 'Common Evening Census',
-            # 'Common Evening Micro',
+            'Common Evening Micro',
             'Common Evening Municipality',
             'Common Evening Admin',
             'Common Evening Province',
             # 'Common Evening Postal1',
             # 'Common Evening Postal2',
-            'Common Evening Custom1',
-            'Common Evening Custom2',
             # 'Common Evening Distance Mi',
             'Visit Date',
             # 'Visit Time',
