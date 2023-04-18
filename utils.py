@@ -173,7 +173,7 @@ class MobileDataParser:
 
     def write_out(self):
         print('Writing Output file...')
-        with open(self.out_file_name, 'w', newline='') as file:
+        with open(self.out_file_name, 'w', newline='', encoding="utf8") as file:
             fieldnames = list(self.CEL[0].keys())
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
